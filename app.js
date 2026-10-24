@@ -280,6 +280,19 @@ $('cargarLoginBtn').addEventListener('click', async () => {
   $('cargarLoginMsg').textContent = error ? error.message : 'Revisá pilicrosta@gmail.com y abrí el enlace.';
 });
 
+const looksHeic = file => /\.hei[cf]$/i.test(file.name) || /^image\/hei[cf]/i.test(file.type);
+let heicTo;
+async function jpegFile(file) {
+  if (!looksHeic(file)) return file;
+  try {
+    if (!heicTo) ({heicTo} = await import('https://cdn.jsdelivr.net/npm/heic-to@1.6.6/dist/heic-to.js'));
+    const blob = await heicTo({blob: file, type: 'image/jpeg', quality: 0.85});
+    return new File([blob], file.name.replace(/\.hei[cf]$/i, '') + '.jpg', {type: 'image/jpeg'});
+  } catch {
+    throw new Error('No pude pasar ' + file.name + ' a JPEG.');
+  }
+}
+
 $('cargarForm').addEventListener('submit', async event => {
   event.preventDefault();
   const msg = $('cargarMsg');
@@ -289,13 +302,20 @@ $('cargarForm').addEventListener('submit', async event => {
   try {
     const upload = async file => {
       const path = `${Date.now()}-${file.name.replace(/[^\w.\-]+/g, '-')}`;
-      const {error} = await sb.storage.from('productos').upload(path, file);
+      const {error} = await sb.storage.from('productos').upload(path, file, {contentType: file.type || 'image/jpeg'});
       if (error) throw error;
       return sb.storage.from('productos').getPublicUrl(path).data.publicUrl;
     };
-    const cover = await upload($('cargarFoto').files[0]);
+    const coverSource = $('cargarFoto').files[0];
+    const extraSources = [...$('cargarFotos').files];
+    if ([coverSource, ...extraSources].some(looksHeic)) msg.textContent = 'Pasando las fotos a JPEG…';
+    const coverJpeg = await jpegFile(coverSource);
+    const extraJpegs = [];
+    for (const file of extraSources) extraJpegs.push(await jpegFile(file));
+    msg.textContent = 'Subiendo…';
+    const cover = await upload(coverJpeg);
     const extras = [];
-    for (const file of $('cargarFotos').files) extras.push(await upload(file));
+    for (const file of extraJpegs) extras.push(await upload(file));
     const {error} = await sb.from('products').insert({
       title: $('cargarTitulo').value.trim(),
       category: $('cargarCategoria').value,
