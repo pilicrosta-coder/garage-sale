@@ -19,6 +19,7 @@ body {
   background: var(--cream);
   color: var(--ink);
   font-family: Nunito, sans-serif;
+  overflow-x: clip;
 }
 img { max-width: 100%; }
 button, input { font: inherit; }
@@ -170,27 +171,34 @@ h2 { font-size: clamp(34px, 4vw, 52px); margin: 0; line-height: 1; }
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
   column-gap: 16px;
+  row-gap: 8px;
   align-items: center;
   padding: 16px 18px;
 }
 #products-muebles .photo,
-#products-chiquitaje .photo { width: 96px; height: 96px; border-radius: 14px; }
-#products-muebles .product-info,
-#products-chiquitaje .product-info { padding: 0; }
+#products-chiquitaje .photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 14px;
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+#products-muebles .product-top,
+#products-chiquitaje .product-top { grid-column: 2; grid-row: 1; }
+#products-muebles .stock,
+#products-chiquitaje .stock { grid-column: 2; grid-row: 2; margin: 0; }
+#products-muebles .card-actions,
+#products-chiquitaje .card-actions { grid-column: 2; grid-row: 3; justify-content: flex-start; }
 #products-muebles .status,
 #products-chiquitaje .status { top: 6px; left: 6px; padding: 3px 6px; font-size: 9px; }
 #products-muebles .product h3,
 #products-chiquitaje .product h3 { font-size: 20px; }
 #products-muebles .placeholder,
 #products-chiquitaje .placeholder { font-size: 0; }
-#products-muebles .stock,
-#products-chiquitaje .stock { margin: 8px 0 12px; }
 #products-muebles .stock strong,
 #products-chiquitaje .stock strong { font-size: 16px; }
-#products-muebles .card-actions,
-#products-chiquitaje .card-actions { justify-content: flex-start; }
 #products-muebles .card-actions .pill,
-#products-chiquitaje .card-actions .pill { flex: 0 0 auto; min-width: 148px; padding: 10px 18px; }
+#products-chiquitaje .card-actions .pill { flex: 0 0 auto; min-width: 0; padding: 10px 18px; }
 .product { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 8px 0 rgba(102, 115, 57, 0.08); cursor: pointer; }
 .photo { position: relative; height: 120px; background: var(--pink); overflow: hidden; }
 .photo img { width: 100%; height: 100%; object-fit: cover; }
@@ -321,7 +329,9 @@ dialog::backdrop { background: #2c3224c0; }
 
 @media (max-width: 640px) {
   header { display: block; width: 100%; max-width: 100%; padding: 14px 16px 8px; }
-  .brand { font-size: 24px; }
+  .brand { font-size: 22px; max-width: 100%; }
+  .brand em { font-size: 16px; }
+  .brand-name { white-space: normal; }
   nav {
     display: flex;
     flex-wrap: wrap;
@@ -343,18 +353,16 @@ dialog::backdrop { background: #2c3224c0; }
   .hero { padding: 32px 16px 28px; }
   #products-muebles .product,
   #products-chiquitaje .product {
-    grid-template-columns: 84px minmax(0, 1fr);
+    grid-template-columns: 76px minmax(0, 1fr);
     column-gap: 12px;
-    row-gap: 12px;
+    row-gap: 10px;
     padding: 14px;
-    align-items: start;
+    align-items: center;
   }
-  #products-muebles .product-info,
-  #products-chiquitaje .product-info { display: contents; }
   #products-muebles .photo,
   #products-chiquitaje .photo {
-    width: 84px;
-    height: 84px;
+    width: 76px;
+    height: 76px;
     grid-column: 1;
     grid-row: 1;
   }
@@ -365,6 +373,7 @@ dialog::backdrop { background: #2c3224c0; }
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+    min-width: 0;
   }
   #products-muebles .product h3,
   #products-chiquitaje .product h3 { font-size: 18px; }
@@ -373,13 +382,14 @@ dialog::backdrop { background: #2c3224c0; }
     grid-column: 1 / -1;
     grid-row: 2;
     margin: 0;
-    gap: 16px;
+    gap: 14px;
   }
   #products-muebles .card-actions,
   #products-chiquitaje .card-actions {
     grid-column: 1 / -1;
     grid-row: 3;
     flex-direction: column;
+    width: 100%;
   }
   #products-muebles .card-actions .pill,
   #products-chiquitaje .card-actions .pill {

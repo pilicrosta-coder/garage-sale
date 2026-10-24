@@ -47,17 +47,15 @@ function card(p) {
     : `<div class="placeholder">${esc(p.title)}</div>`;
   return `<article class="product is-${state}" data-id="${p.id}">
     <div class="photo">${photo}<span class="status ${state === 'available' ? '' : state}">${badge}</span></div>
-    <div class="product-info">
-      <div class="product-top"><h3>${esc(p.title)}</h3><div class="price">${money(p.price)}</div></div>
-      <ul class="stock">
-        <li><span>Stock</span><strong>${u.available}</strong></li>
-        <li class="${u.reserved > 0 ? 'reserved-count' : ''}"><span>Reservados</span><strong>${u.reserved}</strong></li>
-        <li><span>Vendidos</span><strong>${u.sold}</strong></li>
-      </ul>
-      <div class="card-actions">
-        <button type="button" class="pill pill-ghost" data-open="${p.id}">Ver</button>
-        <button type="button" class="pill" data-reserve="${p.id}" ${u.available < 1 ? 'disabled' : ''}>${label}</button>
-      </div>
+    <div class="product-top"><h3>${esc(p.title)}</h3><div class="price">${money(p.price)}</div></div>
+    <ul class="stock">
+      <li><span>Stock</span><strong>${u.available}</strong></li>
+      <li class="${u.reserved > 0 ? 'reserved-count' : ''}"><span>Reservados</span><strong>${u.reserved}</strong></li>
+      <li><span>Vendidos</span><strong>${u.sold}</strong></li>
+    </ul>
+    <div class="card-actions">
+      <button type="button" class="pill pill-ghost" data-open="${p.id}">Ver</button>
+      <button type="button" class="pill" data-reserve="${p.id}" ${u.available < 1 ? 'disabled' : ''}>${label}</button>
     </div>
   </article>`;
 }
