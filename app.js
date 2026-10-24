@@ -96,7 +96,9 @@ function openPublication(id) {
   reserve.dataset.reserve = product.id;
   $('pubPhotos').querySelectorAll('[data-photo]').forEach(button => {
     button.onclick = async () => {
-      const url = await jpegUrl(button.dataset.photo);
+      const shown = button.querySelector('img');
+      const ready = shown && shown.naturalWidth > 0 && !isHeicUrl(shown.currentSrc || shown.src);
+      const url = ready ? (shown.currentSrc || shown.src) : await jpegUrl(button.dataset.photo);
       button.dataset.photo = url;
       $('pubMain').src = url;
       $('pubPhotos').querySelectorAll('[data-photo]').forEach(other => other.classList.toggle('is-on', other === button));
@@ -287,9 +289,13 @@ $('cargarLoginBtn').addEventListener('click', async () => {
 
 const looksHeic = file => /\.hei[cf]$/i.test(file.name) || /^image\/hei[cf]/i.test(file.type);
 const isHeicUrl = url => /\.hei[cf](?:$|\?)/i.test(String(url || ''));
+function localJpeg(url) {
+  const name = decodeURIComponent(String(url || '').split('/').pop() || '').replace(/\.hei[cf]$/i, '.jpg');
+  return name ? 'images/' + name : '';
+}
 function photoTag(src, alt, id) {
   const idAttr = id ? ` id="${id}"` : '';
-  if (isHeicUrl(src)) return `<img data-heic="${esc(src)}" alt="${esc(alt)}"${idAttr}>`;
+  if (isHeicUrl(src)) return `<img src="${esc(localJpeg(src))}" data-heic="${esc(src)}" alt="${esc(alt)}"${idAttr}>`;
   return `<img src="${esc(src)}" alt="${esc(alt)}"${idAttr}>`;
 }
 let heicTo;
@@ -309,16 +315,28 @@ async function jpegUrl(url) {
 }
 async function revealHeic(root) {
   if (!root) return;
-  await Promise.all([...root.querySelectorAll('img[data-heic]')].map(async img => {
-    try {
-      img.src = await jpegUrl(img.dataset.heic);
+  const images = [...root.querySelectorAll('img[data-heic]')];
+  await Promise.all(images.map(img => new Promise(resolve => {
+    const keep = () => {
       const button = img.closest('[data-photo]');
-      if (button) button.dataset.photo = img.src;
+      if (button && img.naturalWidth > 0) button.dataset.photo = img.currentSrc || img.src;
       img.removeAttribute('data-heic');
-    } catch {
-      img.alt = 'No se pudo mostrar la foto';
-    }
-  }));
+      resolve();
+    };
+    const useRemote = async () => {
+      try {
+        img.src = await jpegUrl(img.dataset.heic);
+        keep();
+      } catch {
+        img.alt = 'No se pudo mostrar la foto';
+        resolve();
+      }
+    };
+    if (img.complete && img.naturalWidth > 0) return keep();
+    if (img.complete && img.naturalWidth === 0) return useRemote();
+    img.addEventListener('load', keep, {once: true});
+    img.addEventListener('error', () => useRemote(), {once: true});
+  })));
 }
 async function jpegFile(file) {
   if (!looksHeic(file)) return file;
