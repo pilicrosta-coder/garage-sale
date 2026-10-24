@@ -60,12 +60,14 @@ function card(p) {
   </article>`;
 }
 
+let photoOpenedAt = 0;
 function openPhoto(src, alt) {
   if (!src) return;
   const img = $('photoFull');
   img.src = src;
   img.alt = alt || '';
   const dialog = $('photoDialog');
+  photoOpenedAt = Date.now();
   if (!dialog.open) dialog.showModal();
 }
 
@@ -128,9 +130,15 @@ function openPublication(id) {
   window.scrollTo(0, 0);
 }
 
+function byStockThenPrice(a, b) {
+  const stock = (units(b).available > 0) - (units(a).available > 0);
+  if (stock) return stock;
+  return Number(b.price) - Number(a.price);
+}
+
 function render() {
   for (const [category, id] of [['muebles', 'products-muebles'], ['chiquitaje', 'products-chiquitaje']]) {
-    const html = items.filter(p => p.category === category).map(card).join('');
+    const html = items.filter(p => p.category === category).sort(byStockThenPrice).map(card).join('');
     $(id).innerHTML = html || '<p class="empty">Todavía no hay artículos en esta sección.</p>';
   }
   document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openPublication(b.dataset.open)));
@@ -419,6 +427,7 @@ if (sb) {
   });
 }
 $('photoDialog').addEventListener('click', event => {
+  if (Date.now() - photoOpenedAt < 400) return;
   if (event.target === $('photoDialog') || event.target.closest('[data-close-photo]')) $('photoDialog').close();
 });
 window.addEventListener('hashchange', route);
