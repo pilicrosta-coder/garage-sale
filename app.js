@@ -217,9 +217,31 @@ $('reserveForm').addEventListener('submit', async e => {
     return;
   }
   $('reserveMessage').textContent = '¡Reservado! Tu lugar quedó registrado. Te contactaremos para coordinar la compra.';
+  const notice = notifySale({title: chosen.title, price: chosen.price}, name, phone);
   await load();
+  await notice;
   setTimeout(() => { if ($('reserveDialog').open) $('reserveDialog').close(); }, 2200);
 });
+
+async function notifySale(product, name, phone) {
+  const email = cfg && cfg.adminEmail;
+  if (!email) return;
+  try {
+    await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(email), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+      body: JSON.stringify({
+        _subject: 'Nueva reserva: ' + product.title,
+        _template: 'table',
+        _captcha: 'false',
+        Nombre: name,
+        Teléfono: phone,
+        Reservó: product.title,
+        Precio: money(product.price)
+      })
+    });
+  } catch {}
+}
 
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('dialog').close());
 $('pubReserve').addEventListener('click', () => openReserve($('pubReserve').dataset.reserve));
