@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fbf6ee">
+<title>Piluki Garage Sale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,560;0,9..144,680;1,9..144,560&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="#como-funciona" data-tab="como-funciona"><span class="brand-name">PILUKI <em>garage sale</em></span><span class="tagline">de mi casa a la tuya</span></a>
+  <nav>
+    <a href="#como-funciona" data-tab="como-funciona">Cómo funciona</a>
+    <a href="#muebles" data-tab="muebles">Muebles</a>
+    <a href="#chiquitaje" data-tab="chiquitaje">Chiquitaje</a>
+    <a href="#mis-reservas" data-tab="mis-reservas">Mis reservas</a>
+  </nav>
+</header>
+<div id="notice" class="notice" hidden></div>
+
+<section class="panel home" data-panel="como-funciona">
+  <div class="hero">
+    <h1>Cómo funciona</h1>
+    <p class="lead">Reservás una unidad, te escribo para coordinar y lo retirás en mi departamento de Palermo. Piso 12. El ascensor es muuuy chiquito y la escalera es amplia. Tené en cuenta si necesitás un fletero que lo baje. Lo que sí tiene que ir por escalera lo menciono en la publicación.</p>
+    <div class="hero-actions">
+      <a class="pill" href="#muebles" data-tab="muebles">Ver muebles</a>
+      <a class="pill pill-ghost" href="#chiquitaje" data-tab="chiquitaje">Ver chiquitaje</a>
+    </div>
+  </div>
+
+  <div class="band band-olive">
+    <div class="band-inner about">
+      <img class="about-photo" src="images/piluki-crop.jpg" alt="Pili">
+      <div>
+        <h2>Soy Pili.</h2>
+        <p>Esta es la página para mi familia, amigos y amigos de amigos. Vendo mis muebles. ¿Por qué los vendo? Ciclos que terminan y otros que empiezan. Me mudo y no necesito todo esto. Todos estos muebles los elegí con mucho amor los últimos 6 años. Si algo te sirve, reservás y te escribo yo por WhatsApp. Reservar no cobra ni cierra la compra, eso lo hablamos por WhatsApp.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel catalog" data-panel="muebles" hidden>
+  <div class="section-head">
+    <div>
+      <h2>Muebles</h2>
+    </div>
+  </div>
+  <div id="products-muebles" class="products"></div>
+</section>
+
+<section class="panel catalog" data-panel="chiquitaje" hidden>
+  <div class="section-head">
+    <div>
+      <h2>Chiquitaje</h2>
+    </div>
+  </div>
+  <div id="products-chiquitaje" class="products products-small"></div>
+</section>
+
+<section class="panel catalog publication-page" data-panel="publicacion" hidden>
+  <button type="button" class="back" id="pubBack" data-tab="muebles">Volver</button>
+  <div id="pubPhotos"></div>
+  <h2 id="pubTitle"></h2>
+  <p id="pubPrice" class="price"></p>
+  <ul id="pubStock" class="stock"></ul>
+  <div id="pubMedidas" class="pub-block"></div>
+  <div id="pubDescription" class="pub-block"></div>
+  <button type="button" class="pill" id="pubReserve">Reservar</button>
+</section>
+
+<section class="panel catalog" data-panel="cargar" hidden>
+  <div class="section-head">
+    <div>
+      <p class="eyebrow">Solo vos</p>
+      <h2>Cargar producto</h2>
+    </div>
+    <p>Foto, medidas y descripción quedan en la base. Esta pantalla no está en el menú.</p>
+  </div>
+  <div id="cargarLogin">
+    <p>Entrá con pilicrosta@gmail.com para subir productos.</p>
+    <button type="button" class="pill" id="cargarLoginBtn">Enviar enlace</button>
+    <p id="cargarLoginMsg" class="feedback"></p>
+  </div>
+  <form id="cargarForm" class="cargar-form" hidden>
+    <label>Nombre<input id="cargarTitulo" required maxlength="120"></label>
+    <label>Sección
+      <select id="cargarCategoria">
+        <option value="muebles">Muebles</option>
+        <option value="chiquitaje">Chiquitaje</option>
+      </select>
+    </label>
+    <label>Precio<input id="cargarPrecio" type="number" min="0" required placeholder="790000"></label>
+    <label>Stock<input id="cargarStock" type="number" min="1" max="3" value="1" required></label>
+    <label>Medidas<input id="cargarMedidas" maxlength="200" placeholder="140 × 80 × 75 cm"></label>
+    <label>Descripción<textarea id="cargarDescripcion" rows="4" maxlength="800" placeholder="Lo que quieras contar de este producto"></textarea></label>
+    <label>Foto principal<input id="cargarFoto" type="file" accept="image/*" required></label>
+    <label>Más fotos<input id="cargarFotos" type="file" accept="image/*" multiple></label>
+    <button class="pill" type="submit">Guardar en la base</button>
+    <p id="cargarMsg" class="feedback"></p>
+  </form>
+</section>
+
+<section class="panel catalog" data-panel="mis-reservas" hidden>
+  <div class="section-head">
+    <div>
+      <p class="eyebrow">Con el WhatsApp que dejaste</p>
+      <h2>Mis reservas</h2>
+    </div>
+    <p>Solo ves lo que reservaste vos. El teléfono no se muestra a nadie más.</p>
+  </div>
+  <form id="mineForm" class="mine-form">
+    <label>Tu WhatsApp<input id="minePhone" type="tel" required placeholder="Ej. +54 9 11 ..." autocomplete="tel"></label>
+    <button class="pill" type="submit">Ver mis reservas</button>
+  </form>
+  <div id="myList" class="mine-list"></div>
+</section>
+
+<footer>
+  <div class="brand"><span class="brand-name">PILUKI <em>garage sale</em></span><span class="tagline">de mi casa a la tuya</span></div>
+</footer>
+
+<dialog id="reserveDialog">
+  <form id="reserveForm" class="modal">
+    <button type="button" class="close" data-close aria-label="Cerrar">×</button>
+    <p class="eyebrow">Reserva</p>
+    <h2 id="reserveTitle">Reservar</h2>
+    <p id="reserveHint">Al confirmar, esta unidad queda reservada a tu nombre. Después coordinamos la compra.</p>
+    <label>Tu nombre<input id="buyerName" maxlength="80" required placeholder="Nombre y apellido" autocomplete="name"></label>
+    <label>Tu WhatsApp<input id="buyerPhone" maxlength="40" required placeholder="Ej. +54 9 11 ..." autocomplete="tel"></label>
+    <button class="pill" id="reserveSubmit" type="submit">Confirmar reserva</button>
+    <div id="reserveMessage" class="feedback" role="status"></div>
+  </form>
+</dialog>
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
