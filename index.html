@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,560;0,9..144,680;1,9..144,560&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <header>
@@ -123,6 +123,10 @@
   <div class="brand"><span class="brand-name">PILUKI <em>garage sale</em></span><span class="tagline">de mi casa a la tuya</span></div>
 </footer>
 
+<dialog id="photoDialog">
+  <button type="button" class="close" data-close-photo aria-label="Cerrar">×</button>
+  <img id="photoFull" alt="">
+</dialog>
 <dialog id="reserveDialog">
   <form id="reserveForm" class="modal">
     <button type="button" class="close" data-close aria-label="Cerrar">×</button>
@@ -136,6 +140,6 @@
   </form>
 </dialog>
 <script src="config.js"></script>
-<script type="module" src="app.js?v=7"></script>
+<script type="module" src="app.js?v=8"></script>
 </body>
 </html>

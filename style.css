@@ -297,6 +297,37 @@ dialog { border: 0; border-radius: 24px; padding: 0; width: min(94vw, 460px); bo
 .cargar-form input[type="file"] { padding: 10px 14px; }
 .pub-main { background: #efe6d8; border-radius: 18px; overflow: hidden; }
 .pub-main img, .pub-main .placeholder { width: 100%; height: 380px; object-fit: cover; display: block; }
+.pub-main img.can-zoom { cursor: zoom-in; }
+#photoDialog {
+  width: auto;
+  max-width: min(96vw, 1200px);
+  max-height: 96vh;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+#photoDialog::backdrop { background: #2c3224e0; }
+#photoDialog img {
+  display: block;
+  max-width: min(96vw, 1200px);
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #1f241c;
+}
+#photoDialog .close {
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--ink);
+  line-height: 34px;
+}
 .pub-thumbs { display: flex; gap: 8px; margin-top: 8px; }
 .pub-thumbs button { width: 72px; height: 72px; padding: 0; border: 2px solid transparent; border-radius: 12px; overflow: hidden; background: none; cursor: pointer; }
 .pub-thumbs img { width: 100%; height: 100%; object-fit: cover; }

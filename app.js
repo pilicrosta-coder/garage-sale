@@ -60,6 +60,15 @@ function card(p) {
   </article>`;
 }
 
+function openPhoto(src, alt) {
+  if (!src) return;
+  const img = $('photoFull');
+  img.src = src;
+  img.alt = alt || '';
+  const dialog = $('photoDialog');
+  if (!dialog.open) dialog.showModal();
+}
+
 function photosOf(p) {
   const extra = String(p.fotos || '').split(/\n|,/).map(s => s.trim()).filter(Boolean);
   const all = [];
@@ -105,6 +114,11 @@ function openPublication(id) {
     };
   });
   revealHeic($('pubPhotos'));
+  const mainPhoto = $('pubMain');
+  if (mainPhoto) {
+    mainPhoto.classList.add('can-zoom');
+    mainPhoto.onclick = () => openPhoto(mainPhoto.currentSrc || mainPhoto.src, mainPhoto.alt);
+  }
   $('pubBack').dataset.tab = product.category;
   $('pubBack').textContent = product.category === 'chiquitaje' ? 'Volver a chiquitaje' : 'Volver a muebles';
   document.querySelectorAll('[data-panel]').forEach(panel => { panel.hidden = panel.dataset.panel !== 'publicacion'; });
@@ -404,5 +418,8 @@ if (sb) {
     if (location.hash === '#cargar') refreshCargar();
   });
 }
+$('photoDialog').addEventListener('click', event => {
+  if (event.target === $('photoDialog') || event.target.closest('[data-close-photo]')) $('photoDialog').close();
+});
 window.addEventListener('hashchange', route);
 load().then(route);
