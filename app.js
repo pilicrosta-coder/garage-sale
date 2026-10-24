@@ -43,7 +43,7 @@ function card(p) {
   const badge = state === 'available' ? 'Disponible' : state === 'reserved' ? 'Reservado' : 'Vendido';
   const label = state === 'available' ? '¡Lo quiero! Reservar' : state === 'reserved' ? 'Ya reservado' : 'Vendido';
   const photo = p.image
-    ? `<img src="${esc(p.image)}" alt="${esc(p.title)}">`
+    ? photoTag(p.image, p.title)
     : `<div class="placeholder">${esc(p.title)}</div>`;
   return `<article class="product is-${state}" data-id="${p.id}">
     <div class="photo">${photo}<span class="status ${state === 'available' ? '' : state}">${badge}</span></div>
@@ -77,10 +77,10 @@ function openPublication(id) {
   const u = units(product);
   const photos = photosOf(product);
   const main = photos[0]
-    ? `<img id="pubMain" src="${esc(photos[0])}" alt="${esc(product.title)}">`
+    ? photoTag(photos[0], product.title, 'pubMain')
     : `<div class="placeholder">${esc(product.title)}</div>`;
   const thumbs = photos.length > 1
-    ? `<div class="pub-thumbs">${photos.map((src, i) => `<button type="button" class="${i === 0 ? 'is-on' : ''}" data-photo="${esc(src)}"><img src="${esc(src)}" alt=""></button>`).join('')}</div>`
+    ? `<div class="pub-thumbs">${photos.map((src, i) => `<button type="button" class="${i === 0 ? 'is-on' : ''}" data-photo="${esc(src)}">${photoTag(src, '')}</button>`).join('')}</div>`
     : '';
   $('pubPhotos').innerHTML = `<div class="pub-main">${main}</div>${thumbs}`;
   $('pubTitle').textContent = product.title;
@@ -95,11 +95,14 @@ function openPublication(id) {
   reserve.textContent = u.available > 0 ? '¡Lo quiero! Reservar' : (u.reserved > 0 ? 'Ya reservado' : 'Vendido');
   reserve.dataset.reserve = product.id;
   $('pubPhotos').querySelectorAll('[data-photo]').forEach(button => {
-    button.onclick = () => {
-      $('pubMain').src = button.dataset.photo;
+    button.onclick = async () => {
+      const url = await jpegUrl(button.dataset.photo);
+      button.dataset.photo = url;
+      $('pubMain').src = url;
       $('pubPhotos').querySelectorAll('[data-photo]').forEach(other => other.classList.toggle('is-on', other === button));
     };
   });
+  revealHeic($('pubPhotos'));
   $('pubBack').dataset.tab = product.category;
   $('pubBack').textContent = product.category === 'chiquitaje' ? 'Volver a chiquitaje' : 'Volver a muebles';
   document.querySelectorAll('[data-panel]').forEach(panel => { panel.hidden = panel.dataset.panel !== 'publicacion'; });
@@ -120,6 +123,8 @@ function render() {
     openPublication(article.dataset.id);
   }));
   document.querySelectorAll('[data-reserve]').forEach(b => b.addEventListener('click', () => openReserve(b.dataset.reserve)));
+  revealHeic($('products-muebles'));
+  revealHeic($('products-chiquitaje'));
 }
 
 async function load() {
@@ -281,7 +286,40 @@ $('cargarLoginBtn').addEventListener('click', async () => {
 });
 
 const looksHeic = file => /\.hei[cf]$/i.test(file.name) || /^image\/hei[cf]/i.test(file.type);
+const isHeicUrl = url => /\.hei[cf](?:$|\?)/i.test(String(url || ''));
+function photoTag(src, alt, id) {
+  const idAttr = id ? ` id="${id}"` : '';
+  if (isHeicUrl(src)) return `<img data-heic="${esc(src)}" alt="${esc(alt)}"${idAttr}>`;
+  return `<img src="${esc(src)}" alt="${esc(alt)}"${idAttr}>`;
+}
 let heicTo;
+const jpegUrls = new Map();
+async function jpegUrl(url) {
+  if (!isHeicUrl(url)) return url;
+  if (!jpegUrls.has(url)) {
+    jpegUrls.set(url, (async () => {
+      if (!heicTo) ({heicTo} = await import('https://cdn.jsdelivr.net/npm/heic-to@1.6.6/dist/heic-to.js'));
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('foto');
+      const jpeg = await heicTo({blob: await response.blob(), type: 'image/jpeg', quality: 0.85});
+      return URL.createObjectURL(jpeg);
+    })());
+  }
+  return jpegUrls.get(url);
+}
+async function revealHeic(root) {
+  if (!root) return;
+  await Promise.all([...root.querySelectorAll('img[data-heic]')].map(async img => {
+    try {
+      img.src = await jpegUrl(img.dataset.heic);
+      const button = img.closest('[data-photo]');
+      if (button) button.dataset.photo = img.src;
+      img.removeAttribute('data-heic');
+    } catch {
+      img.alt = 'No se pudo mostrar la foto';
+    }
+  }));
+}
 async function jpegFile(file) {
   if (!looksHeic(file)) return file;
   try {
