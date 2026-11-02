@@ -61,6 +61,10 @@ function card(p) {
 }
 
 let photoOpenedAt = 0;
+let gallery = [];
+let galleryIndex = 0;
+let galleryTicket = 0;
+let lastSwipe = 0;
 function openPhoto(src, alt) {
   if (!src) return;
   const img = $('photoFull');
@@ -69,6 +73,45 @@ function openPhoto(src, alt) {
   const dialog = $('photoDialog');
   photoOpenedAt = Date.now();
   if (!dialog.open) dialog.showModal();
+}
+
+function wireSwipe(el, step) {
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+  el.addEventListener('touchstart', event => {
+    if (event.touches.length !== 1) return;
+    tracking = true;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, {passive: true});
+  el.addEventListener('touchend', event => {
+    if (!tracking) return;
+    tracking = false;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
+    lastSwipe = Date.now();
+    step(dx < 0 ? 1 : -1);
+  }, {passive: true});
+}
+
+async function showGallery(index) {
+  if (!gallery.length) return;
+  const next = (index + gallery.length) % gallery.length;
+  galleryIndex = next;
+  const ticket = ++galleryTicket;
+  const src = gallery[next];
+  const url = isHeicUrl(src) ? await jpegUrl(src) : src;
+  if (ticket !== galleryTicket) return;
+  const main = $('pubMain');
+  if (main) main.src = url;
+  $('pubPhotos').querySelectorAll('[data-photo]').forEach((button, i) => button.classList.toggle('is-on', i === next));
+  if ($('photoDialog').open) {
+    $('photoFull').src = url;
+    $('photoFull').alt = main ? main.alt : '';
+  }
 }
 
 function photosOf(p) {
@@ -90,10 +133,16 @@ function openPublication(id) {
   const main = photos[0]
     ? photoTag(photos[0], product.title, 'pubMain')
     : `<div class="placeholder">${esc(product.title)}</div>`;
+  gallery = photos;
+  galleryIndex = 0;
+  const arrows = photos.length > 1
+    ? `<button type="button" class="photo-arrow prev" data-step="-1" aria-label="Foto anterior">‹</button><button type="button" class="photo-arrow next" data-step="1" aria-label="Foto siguiente">›</button>`
+    : '';
   const thumbs = photos.length > 1
     ? `<div class="pub-thumbs">${photos.map((src, i) => `<button type="button" class="${i === 0 ? 'is-on' : ''}" data-photo="${esc(src)}">${photoTag(src, '')}</button>`).join('')}</div>`
     : '';
-  $('pubPhotos').innerHTML = `<div class="pub-main">${main}</div>${thumbs}`;
+  $('pubPhotos').innerHTML = `<div class="pub-stage"><div class="pub-main">${main}</div>${arrows}</div>${thumbs}`;
+  $('photoDialog').classList.toggle('has-many', photos.length > 1);
   $('pubTitle').textContent = product.title;
   $('pubPrice').textContent = money(product.price);
   $('pubStock').innerHTML = `<li><span>Stock</span><strong>${u.available}</strong></li><li class="${u.reserved > 0 ? 'reserved-count' : ''}"><span>Reservados</span><strong>${u.reserved}</strong></li><li><span>Vendidos</span><strong>${u.sold}</strong></li>`;
@@ -105,21 +154,25 @@ function openPublication(id) {
   reserve.disabled = u.available < 1;
   reserve.textContent = u.available > 0 ? '¡Lo quiero! Reservar' : (u.reserved > 0 ? 'Ya reservado' : 'Vendido');
   reserve.dataset.reserve = product.id;
-  $('pubPhotos').querySelectorAll('[data-photo]').forEach(button => {
-    button.onclick = async () => {
-      const shown = button.querySelector('img');
-      const ready = shown && shown.naturalWidth > 0 && !isHeicUrl(shown.currentSrc || shown.src);
-      const url = ready ? (shown.currentSrc || shown.src) : await jpegUrl(button.dataset.photo);
-      button.dataset.photo = url;
-      $('pubMain').src = url;
-      $('pubPhotos').querySelectorAll('[data-photo]').forEach(other => other.classList.toggle('is-on', other === button));
+  $('pubPhotos').querySelectorAll('[data-photo]').forEach((button, i) => {
+    button.onclick = () => showGallery(i);
+  });
+  $('pubPhotos').querySelectorAll('[data-step]').forEach(button => {
+    button.onclick = event => {
+      event.stopPropagation();
+      showGallery(galleryIndex + Number(button.dataset.step));
     };
   });
+  const stage = $('pubPhotos').querySelector('.pub-stage');
+  if (stage && photos.length > 1) wireSwipe(stage, delta => showGallery(galleryIndex + delta));
   revealHeic($('pubPhotos'));
   const mainPhoto = $('pubMain');
   if (mainPhoto) {
     mainPhoto.classList.add('can-zoom');
-    mainPhoto.onclick = () => openPhoto(mainPhoto.currentSrc || mainPhoto.src, mainPhoto.alt);
+    mainPhoto.onclick = () => {
+      if (Date.now() - lastSwipe < 450) return;
+      openPhoto(mainPhoto.currentSrc || mainPhoto.src, mainPhoto.alt);
+    };
   }
   $('pubBack').dataset.tab = product.category;
   $('pubBack').textContent = product.category === 'chiquitaje' ? 'Volver a chiquitaje' : 'Volver a muebles';
@@ -448,8 +501,28 @@ if (sb) {
     if (location.hash === '#cargar') refreshCargar();
   });
 }
+$('photoDialog').querySelectorAll('[data-lightbox-step]').forEach(button => {
+  button.onclick = event => {
+    event.stopPropagation();
+    showGallery(galleryIndex + Number(button.dataset.lightboxStep));
+  };
+});
+wireSwipe($('photoDialog'), delta => {
+  if (!$('photoDialog').open || gallery.length < 2) return;
+  showGallery(galleryIndex + delta);
+});
+document.addEventListener('keydown', event => {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+  const publication = document.querySelector('[data-panel="publicacion"]');
+  const zoomed = $('photoDialog').open;
+  if (!zoomed && (!publication || publication.hidden)) return;
+  if (gallery.length < 2) return;
+  if (event.target.closest('input, textarea')) return;
+  event.preventDefault();
+  showGallery(galleryIndex + (event.key === 'ArrowRight' ? 1 : -1));
+});
 $('photoDialog').addEventListener('click', event => {
-  if (Date.now() - photoOpenedAt < 400) return;
+  if (Date.now() - photoOpenedAt < 400 || Date.now() - lastSwipe < 450) return;
   if (event.target === $('photoDialog') || event.target.closest('[data-close-photo]')) $('photoDialog').close();
 });
 window.addEventListener('hashchange', route);
